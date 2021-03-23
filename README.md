@@ -2,9 +2,8 @@
 Claim your own piece of mars. 
 
 
-<img src="future.jpeg" alt="drawing" width="200"/>
+<img src="future.jpeg" alt="drawing" width="600"/>
 
-t
 
 ## Build on
 
