@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <title>To-the-mars!</title>
+  <title>Thank you!</title>
 <!--
 
 Highway Template
@@ -25,16 +25,13 @@ https://templatemo.com/tm-520-highway
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Zilla+Slab+Highlight&display=swap" rel="stylesheet">
     <script src="js/vendor/modernizr-2.8.3-respond-1.4.2.min.js"></script>
 </head>
-<body>
-  <div id="video-container">
-      <div style="z-index:-2;"class="video-overlay"></div>
-      <center>
+<body style ="background-color:black;">
+
+<center>
         <div style="padding-top:50px;">
           <h1 style= "align:center; color:white; "><b>Thank you!</b></h1>
           <a href="/index.html" ><h2 style= "align:center; color:white; "><b>Go back to landing page</b></h2></a>
-        </div>
-      </center>
-  </div>
+</center>
 
 <?php
   $to = "dividemars@protonmail.com";//dividemars@protonmail.com
