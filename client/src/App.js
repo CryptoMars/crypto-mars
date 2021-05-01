@@ -15,11 +15,37 @@ function App() {
   return (
     <DrizzleProvider options = {drizzleOptions} >
     <LoadingContainer>
-           <div>
+
+
+        <div>
+          <div class="facts_view">
+            <div class="col-md-4">
+            <div class="single_fact">
+            <h4>Claimed squares: </h4><h3> <ContractData contract= "DivideMars" method= "squareCounter"/></h3>
+            </div>
+            </div>
+
+             <div class=" col-md-4">
+             <div class="single_fact">
+             <h4>Unclaimed squares: </h4><h3> <ContractData contract= "DivideMars" method= "squaresRemainingToAssign"/></h3>
+             </div>
+             </div>
+
+             <div class="col-md-4">
+             <div class="single_fact">
+             <h4>Next claim square amount:</h4><h3>  <ContractData contract= "DivideMars" method= "claimProp"/></h3>
+             </div>
+             </div>
+          </div>
+
+
+
+
             <h5> Your account: </h5>
-            <AccountData accountIndex={0} units= {"ether"} precision = {2}/>
+            <AccountData   accountIndex={0} units= {"ether"} precision = {2}/>
+
             <h5> Constants that might be needed on the page</h5>
-            <p>Contract Name:  <ContractData contract= "DivideMars" method= "NAME"/></p>
+            <p>Contract Name:  <ContractData  contract= "DivideMars" method= "NAME"/></p>
             <p>MAP_HASH:  <ContractData contract= "DivideMars" method= "MAP_HASH"/></p>
             <p>IPFS_HASH: <ContractData contract= "DivideMars" method= "IPFS_HASH"/></p>
             <p>TOTAL_SUPPLY: <ContractData contract= "DivideMars" method= "TOTAL_SUPPLY"/></p>
@@ -38,7 +64,6 @@ function App() {
             <p>Squares claimed:  <ContractData contract= "DivideMars" method= "nClaimed" methodArgs={["0x6F5a2D4DB9a3cF75562CCfE5dfca177596767963"]}/></p>
 
 
-
             <h5> Methods that change the contract state</h5>
             <p>Claim squares: <ContractForm contract= "DivideMars" method= "claimSquare"/></p>
             <p>Square offer to address: <ContractForm contract= "DivideMars" method= "offerSquareForSaleToAddress"/></p>
@@ -49,6 +74,7 @@ function App() {
             <p>Withdraw bid: <ContractForm contract= "DivideMars" method= "withdrawBidForSquare"/></p>
             <p>Accept open bid: <ContractForm contract= "DivideMars" method= "acceptBidForSquare"/></p>
            </div>
+
     </LoadingContainer>
     </DrizzleProvider>
   );
