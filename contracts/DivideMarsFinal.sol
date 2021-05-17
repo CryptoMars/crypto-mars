@@ -1,25 +1,32 @@
 //SPDX-License-Identifier: MIT
+
+// most efficient way to delete offer /bid?
+// do we need an owner?
+// can we get the info offer is not for sale without an mapping entry?
+// better way tp safe the trading info in the mapping?
+// best way to withdraw?
+// verification for the owner? send function to verify an account belongs to someone
+// method to refund ether after delete
+// squares does not exist useful?
+
 pragma solidity ^0.5.16;
 
 
-/// @title A simple co ntract to store property rights on mars
+/// @title A simple contract to store property rights on mars
 contract DivideMars {
-    
-    // To verify the map
-    string public MAP_HASH = "e32ec60a118655ea3c044baf6bd78e3ab057c92f162638153aee9b3f2c5ead7b";
-    string public IPFS_HASH = "QmWmWfR1X9APo2LVUz7rfXjPgPMq5jfvSF1xMtgkcfJqbc"; 
-    
-    //Constants
-    address payable OWNER;
-    uint public TOTAL_SUPPLY = 1000;
-    uint public DEGRESSION;
-    string public NAME ;
 
-    //Variables
-    uint public squaresRemainingToAssign;
+    // Constants and mars divison verification
+    string public constant CHAIN_HASH = "e32ec60a118655ea3c044baf6bd78e3ab057c92f162638153aee9b3f2c5ead7b";
+    string public constant IPFS_HASH = "QmWmWfR1X9APo2LVUz7rfXjPgPMq5jfvSF1xMtgkcfJqbc";
+    uint public constant TOTAL_SUPPLY = 10000;
+    string public constant NAME =  "DivideMars";
+
+    address public OWNER;
+
+    //Variables for claiming
     uint public claimProp;
-    uint public squareCounter;
-
+    uint public squaresClaimed;
+    uint public DEGRESSION ;
 
     //Mappings
     mapping(uint => address) public ownership;
@@ -27,15 +34,12 @@ contract DivideMars {
     mapping(uint => Bid) public bids;
     mapping(address => uint) public toWithdraw;
     mapping(address => uint256) public nClaimed;
+    mapping(address => uint256) public nClaims;
 
     constructor()  public {
-        OWNER = msg.sender;                       // Update total supply
-        squaresRemainingToAssign = TOTAL_SUPPLY;
-        claimProp = 100;
-
-        DEGRESSION = 90;
-        NAME = "Marsdivision";
-        squareCounter = 0;
+        OWNER = msg.sender;
+        claimProp = 128;  // First claim amount
+        squaresClaimed = 0;  //Where to start the claim
     }
 
     // Events
@@ -72,67 +76,72 @@ contract DivideMars {
     }
 
 
-    // Initial distributtruffle migrate-rion
     // Version 1: Simple claim based on ID
     function claimSquare() public {
-        require(nClaimed[msg.sender] == 0, "You claimed the maximum of squares already");
-        require(squaresRemainingToAssign > 0, "All squares are claimed.");
-        uint ids = squareCounter + claimProp;
-        if(ids> TOTAL_SUPPLY){
+        require(squaresClaimed < TOTAL_SUPPLY, "Claiming is over.");
+        require(nClaims[msg.sender] < 3, "You already claimed your portion!");
+        uint ids = squaresClaimed + claimProp;
+        nClaims[msg.sender] += 1;
+        if(ids >= TOTAL_SUPPLY){
             ids = TOTAL_SUPPLY;
-            for (uint i=squareCounter; i < (ids) ; i++) {
+            for (uint i=squaresClaimed; i < (ids) ; i++) {
             ownership[i] = msg.sender;
             }
-            nClaimed[msg.sender] = claimProp;
-            squaresRemainingToAssign = 0;
-            delete squareCounter;
+            nClaimed[msg.sender] += TOTAL_SUPPLY-squaresClaimed;
+            squaresClaimed = TOTAL_SUPPLY;
             delete claimProp;
             delete DEGRESSION;
-            emit FinalSquareClaimed(squareCounter, ids , msg.sender);
+            emit FinalSquareClaimed(squaresClaimed, ids , msg.sender);
         }
         else {
-            for (uint i=squareCounter; i < (ids) ; i++) {
+            for (uint i=squaresClaimed; i < (ids) ; i++) {
                 ownership[i] = msg.sender;
             }
-            nClaimed[msg.sender] = claimProp;
-            squaresRemainingToAssign -= claimProp;
-            squareCounter += claimProp;
-            claimProp = claimProp * DEGRESSION / 100;
-            emit SquareClaimed(squareCounter, ids , msg.sender);
+            nClaimed[msg.sender] += claimProp;
+            emit SquareClaimed(squaresClaimed, ids , msg.sender);
+            squaresClaimed += claimProp;
+            if (squaresClaimed % 1280 == 0) {
+                claimProp  = claimProp / 2 ;
+            }
         }
      }
 
     // Offers
     function offerSquareForSale (uint squareIndex, uint minSalePriceInWei)  public  {
+        require(squaresClaimed == TOTAL_SUPPLY , "Trade opens after the claiming phase ends");
         require(ownership[squareIndex] == msg.sender, "You can not offer a square you do not own");
-        require(squareIndex <= TOTAL_SUPPLY, "Square does not exist");
+        require(squareIndex < TOTAL_SUPPLY, "Square does not exist");
         market[squareIndex] = Offer(true, squareIndex, msg.sender, minSalePriceInWei, address(0x0));
         emit SquareOffered(squareIndex, minSalePriceInWei, address(0x0));
     }
 
     function offerSquareForSaleToAddress (uint squareIndex, uint minSalePriceInWei, address toAddress)  public  {
+        require(squaresClaimed == TOTAL_SUPPLY , "Trade opens after the claiming phase ends");
         require(ownership[squareIndex] == msg.sender, "You can not offer a square you do not own");
-        require(squareIndex <= TOTAL_SUPPLY, "Square does not exist");
+        // problem here?
+        require(squareIndex < TOTAL_SUPPLY, "Square does not exist");
         market[squareIndex] = Offer(true, squareIndex, msg.sender, minSalePriceInWei, toAddress);
         emit SquareOffered(squareIndex, minSalePriceInWei, toAddress);
     }
-    
+
     function squareNoLongerForSale(uint squareIndex) public {
+        require(squaresClaimed == TOTAL_SUPPLY , "Trade opens after the claiming phase ends");
         require(ownership[squareIndex] == msg.sender, "You can not offer a square you do not own");
-        require(squareIndex <= TOTAL_SUPPLY, "Square does not exist");
+        require(squareIndex < TOTAL_SUPPLY, "Square does not exist");
         market[squareIndex] = Offer(false, squareIndex, msg.sender, 0, address(0x0));
         emit OfferWithdrawn(squareIndex);
     }
-    
+
     function buySquare(uint squareIndex) public payable {
+        require(squaresClaimed == TOTAL_SUPPLY , "Trade opens after the claiming phase ends");
+        require(squareIndex < TOTAL_SUPPLY, "Square does not exist");
         Offer memory offer = market[squareIndex];
-        require(squareIndex <= TOTAL_SUPPLY, "Square does not exist");
-        require(offer.isForSale, "Square is not for sale"); 
+        require(offer.isForSale, "Square is not for sale");
         if (offer.onlySellTo != address(0x0)) {
-            require(offer.onlySellTo != msg.sender, "Square is not offered to you");
+            require(offer.onlySellTo == msg.sender, "Square is not offered to you");
         }
-        require(msg.value >= offer.minValue, "The price is higher than your sent Ether"); 
-        require(offer.seller == ownership[squareIndex], "This square is no longer owned by this address");
+        require(msg.value >= offer.minValue, "The price is higher than your sent Ether");
+        require(offer.seller == ownership[squareIndex], "This square is no longer owned by this address"); //sanity check
         address seller = offer.seller;
         ownership[squareIndex] = msg.sender;
         nClaimed[seller]--;
@@ -148,11 +157,11 @@ contract DivideMars {
         }
         emit SquareBought(squareIndex, msg.value, seller, msg.sender);
     }
-    
+
     // Bidding
     function bidForSquare(uint squareIndex) public payable {
-        require(squareIndex <= TOTAL_SUPPLY, "Square does not exist");
-        require(ownership[squareIndex] != address(0x0), "Square is not owned yet");
+        require(squaresClaimed == TOTAL_SUPPLY , "Trade opens after the claiming phase ends");
+        require(squareIndex < TOTAL_SUPPLY, "Square does not exist");
         require(ownership[squareIndex] != msg.sender, "You own this square already");
         require(msg.value > 0, "Bid lower than 0");
         Bid memory existing = bids[squareIndex];
@@ -166,30 +175,30 @@ contract DivideMars {
     }
 
     function withdrawBidForSquare  (uint squareIndex)  public  {
-        require(squareIndex <= TOTAL_SUPPLY, "Square does not exist");
+        require(squaresClaimed == TOTAL_SUPPLY, "Trade opens after the claiming phase ends");
+        require(squareIndex < TOTAL_SUPPLY, "Square does not exist");
         Bid memory bid = bids[squareIndex];
-        require(bid.bidder ==  msg.sender, "You do not have a bid for this square active");
+        require(bid.bidder ==  msg.sender, "There is no active bet from you for this square");
         uint amount = bid.value;
         bids[squareIndex] = Bid(false, squareIndex, address(0x0), 0);
-        msg.sender.transfer(amount);
+        toWithdraw[msg.sender] += amount;
         emit SquareBidWithdrawn(squareIndex, bid.value, msg.sender);
 
     }
 
     function acceptBidForSquare  (uint squareIndex, uint minPrice)  public  {
-        require(squareIndex <= TOTAL_SUPPLY, "Square does not exist");
+        require(squaresClaimed == TOTAL_SUPPLY , "Trade opens after the claiming phase ends");
+        require(squareIndex < TOTAL_SUPPLY, "Square does not exist");
         require(ownership[squareIndex] == msg.sender, "You do not own this square");
-        address seller = msg.sender;
         Bid memory bid = bids[squareIndex];
         require(bid.value > 0, "Empty bid can not be accepted.");
         require(bid.value >= minPrice, "The bid is lower than your minimum price.");
         ownership[squareIndex] = bid.bidder;
-        nClaimed[seller]--;
+        nClaimed[msg.sender]--;
         nClaimed[bid.bidder]++;
         market[squareIndex] = Offer(false, squareIndex, bid.bidder, 0, address(0x0));
         uint amount = bid.value;
         bids[squareIndex] = Bid(false, squareIndex, address(0x0), 0);
-        toWithdraw[seller] += amount;
-        emit SquareBought(squareIndex, bid.value, seller, bid.bidder);
+        toWithdraw[msg.sender] += amount;
     }
 }
