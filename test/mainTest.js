@@ -147,9 +147,9 @@ contract('DivideMars', async accounts => {
         var owner= await divideMars.ownership.call(samples[2])
         assert.equal(owner, accounts[10], "Wrong assignment 3");
         var owner= await divideMars.ownership.call(samples[3])
-        assert.equal(owner, accounts[31], "Wrong assignment 4");
+        assert.equal(owner, accounts[30], "Wrong assignment 4");
         var owner= await divideMars.ownership.call(samples[4])
-        assert.equal(owner, accounts[71], "Wrong assignment 5");
+        assert.equal(owner, accounts[70], "Wrong assignment 5");
         var owner= await divideMars.ownership.call(samples[5]) // should be the second claim of the first account
         assert.equal(owner, accounts[0], "Wrong assignment 6");
      });
@@ -248,8 +248,9 @@ contract('DivideMars', async accounts => {
      });
      it('should transfer money correctly', async  ()=> {
         const  divideMars = await DivideMars.deployed();
-        const money = await divideMars.toWithdraw.call(0,{from: accounts[0]});
-        assert.equal(money, 3000000, "An uncorrect amount of Ether is available")
+        const money = await divideMars.toWithdraw.call(accounts[0]);
+        console.log(money)
+        assert.equal(money, 4000000, "An uncorrect amount of Ether is available")
      });
      it('should change mappings correctly', async  ()=> {
         const  divideMars = await DivideMars.deployed();
@@ -312,11 +313,11 @@ contract('DivideMars', async accounts => {
      it('should allow to accept a bid if one is the owner and transfer money correctly', async  ()=> {
         const  divideMars = await DivideMars.deployed();
         const money = await divideMars.toWithdraw.call(accounts[0]);
-        await divideMars.acceptBidForSquare(20, 5000000,{from: accounts[0]})
-        const new_owner = divideMars.ownership.call(20)
+        await divideMars.acceptBidForSquare(20, 10000,{from: accounts[0]})
+        const new_owner = await divideMars.ownership.call(20);
         assert.equal(new_owner, accounts[2], "Wrong owner for square after bid acceptance")
         const money2 = await divideMars.toWithdraw.call(accounts[0]);
-        assert.equal(money + 1000000, money2, "Money was not sent correctly")
+        assert.equal(parseInt(money) + 1000000, money2, "Money was not sent correctly")
      });
      it('should be possible to withdraw Ether ', async  ()=> {
         const  divideMars = await DivideMars.deployed();
